@@ -11,9 +11,25 @@ const LOG_EVENT_MONSTER_ATTACK = 'MONSTER_ATTACK'
 const LOG_EVENT_PLAYER_HEAL = 'PLAYER_HEAL'
 const LOG_EVENT_GAME_OVER = 'GAME_OVER'
 
-const enteredValue = prompt('Maximum life for you and the monster', '100')
 
-let chosenMaxLife = parseInt(enteredValue);
+
+function getMaxLifeValues() {
+    const enteredValue = prompt('Maximum life for you and the monster', '100')
+    const parsedValue = parseInt(enteredValue);
+    if (isNaN(parsedValue) || parsedValue <= 0) {
+        throw { message: 'Invalid user input not a number' }
+    }
+    return parsedValue
+}
+
+let chosenMaxLife;
+
+try {
+    chosenMaxLife = getMaxLifeValues()
+} catch (error) {
+    chosenMaxLife = 100
+}
+
 
 if (isNaN(chosenMaxLife) || chosenMaxLife <= 0) {
     chosenMaxLife = 100
@@ -23,6 +39,7 @@ let currentMonsterHealth = chosenMaxLife
 let currentPlayerHealth = chosenMaxLife
 let hasBonusLife = true;
 let battleLog = []
+let lastLogEntry = []
 
 adjustHealthBars(chosenMaxLife)
 
@@ -75,7 +92,7 @@ function writeToLog(event, value, monsterHealth, playerHealth) {
             }
             break
         default:
-            console.log('No event')
+            logEntry = {}
     }
 
     battleLog.push(logEntry)
@@ -121,15 +138,9 @@ function endRound() {
 }
 
 function attackMonster(mode) {
-    let maxDamage;
-    let logEvent;
-    if (mode === MODE_ATTACK) {
-        maxDamage = ATTACK_VALUE
-        logEvent = LOG_EVENT_PLAYER_ATTACK
-    } else if (mode === MODE_STRONG_ATTACK) {
-        maxDamage = STRONG_ATTACK_VALUE
-        logEvent = LOG_EVENT_PLAYER_STRONG_ATTACK
-    }
+    const maxDamage = mode === MODE_ATTACK ? ATTACK_VALUE : STRONG_ATTACK_VALUE;
+    const logEvent = mode === MODE_ATTACK ? LOG_EVENT_PLAYER_ATTACK : LOG_EVENT_PLAYER_STRONG_ATTACK;
+
     const damage = dealMonsterDamage(maxDamage)
     currentMonsterHealth -= damage
     writeToLog(logEvent, damage, currentMonsterHealth, currentPlayerHealth)
@@ -159,7 +170,18 @@ function healPlayerHandler() {
 }
 
 function printLogHandler() {
-    console.log(battleLog)
+    for (const logEntry of battleLog) {
+        if (!lastLogEntry && lastLogEntry !== 0 || lastLogEntry < i) {
+            for (const key in logEntry) {
+                console.log(key)
+                console.log(logEntry[key])
+                console.log(`${key} => ${logEntry[key]} `)
+            }
+            lastLogEntry = 1;
+            break
+        }
+        i++
+    }
 }
 
 attackBtn.addEventListener('click', attackHandler)
